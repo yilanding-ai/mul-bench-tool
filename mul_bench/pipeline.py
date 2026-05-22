@@ -224,6 +224,28 @@ class Pipeline:
                 results[mock.name] = {"bam": bam, "meth_bed": meth_bed}
             return results
 
+        correction_enabled = self.config.get("correction", "enabled", default=False)
+
+        # Train model-based error detector if "model" strategy is enabled
+        model_trained = False
+        if correction_enabled:
+            sam_strategies_all = self.config.get("correction", "strategies", default=[])
+            if "model" in sam_strategies_all:
+                ground_truth = self.work_dir / "simulated" / "ground_truth.bed"
+                if ground_truth.exists():
+                    from .preprocessing import ErrorCorrector
+                    train_corrector = ErrorCorrector(self.config, self.work_dir / "corrected")
+                    # Use the first mock aligner SAM for training
+                    from .aligners.mock import MockAlignerFactory
+                    mock_train = MockAlignerFactory.create_mocks(self.config, self.work_dir)[:1]
+                    for mock in mock_train:
+                        train_sam = mock.run_align(read1, read2, reference, threads=self.config.threads)
+                        train_corrector.train_model(train_sam, ground_truth, self.conversion)
+                        model_trained = True
+                        break
+                else:
+                    print("  [Pipeline] Ground truth not found, skipping model training")
+
         for name, cls in real_aligners:
             print(f"\n  --- {name} ---")
             aligner = cls(self.config, self.work_dir)
@@ -235,9 +257,24 @@ class Pipeline:
             print(f"  Aligning...")
             bam = aligner.run_align(read1, read2, reference, threads=self.config.threads)
 
+            # SAM-level error correction (real aligners only)
+            meth_bed = None
+            if correction_enabled:
+                sam_strategies = [s for s in self.config.get("correction", "strategies",
+                                                              default=["mq", "clip"])
+                                  if s in ("mq", "clip", "pair", "unconverted", "model")]
+                if sam_strategies:
+                    from .preprocessing import ErrorCorrector
+                    corrector = ErrorCorrector(self.config, self.work_dir / "corrected")
+                    if model_trained:
+                        corrector.detector = train_corrector.detector
+                    corrected_sam = corrector.correct_sam(
+                        bam, self.conversion, strategies=sam_strategies
+                    )
+                    bam = corrected_sam
+
             print(f"  Calling methylation...")
             meth_bed = aligner.call_methylation(bam, reference)
-
             results[name] = {"bam": bam, "meth_bed": meth_bed}
 
         return results
@@ -247,10 +284,30 @@ class Pipeline:
 
         ground_truth = self.work_dir / "simulated" / "ground_truth.bed"
         if not ground_truth.exists():
-            # Try to find truth in other locations
             for f in self.work_dir.rglob("ground_truth.bed"):
                 ground_truth = f
                 break
+
+        # Apply error correction on methylation BED files if enabled
+        correction_enabled = self.config.get("correction", "enabled", default=False)
+        if correction_enabled:
+            print("  Applying error correction to methylation calls...")
+            from .preprocessing import ErrorCorrector
+            corrector = ErrorCorrector(self.config, self.work_dir / "corrected")
+            corr_strategies = self.config.get("correction", "strategies",
+                                              default=["consensus"])
+            corr_min_depth = self.config.get("correction", "min_depth", default=5)
+            corr_agree = self.config.get("correction", "min_agree_ratio", default=0.7)
+
+            for name in list(aligner_results.keys()):
+                meth_bed = aligner_results[name].get("meth_bed")
+                if meth_bed and Path(meth_bed).exists():
+                    corrected_bed = corrector.correct_bed(
+                        meth_bed, self.conversion, reference=reference,
+                        min_depth=corr_min_depth,
+                        min_agree_ratio=corr_agree
+                    )
+                    aligner_results[name]["meth_bed"] = corrected_bed
 
         evaluator = Evaluator(str(ground_truth))
         all_results = []

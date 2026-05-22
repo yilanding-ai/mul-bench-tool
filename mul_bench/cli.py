@@ -42,9 +42,30 @@ def main():
               default="header", help="UMI location")
 @click.option("--umi-length", type=int, default=0, help="UMI length (0=auto)")
 @click.option("--qc", is_flag=True, help="Run QC analysis before alignment")
+@click.option("--error-correct", is_flag=True, default=False,
+              help="Enable error correction (filter low-quality alignments + consensus)")
+@click.option("--correction-strategies", default="mq,clip,consensus",
+              help="Correction strategies: mq,clip,pair,consensus (comma-separated)")
+@click.option("--correction-min-mq", type=int, default=20,
+              help="Min mapping quality for --error-correct")
+@click.option("--correction-min-depth", type=int, default=5,
+              help="Min depth for consensus correction")
+@click.option("--correction-max-unconverted", type=int, default=3,
+              help="Max allowed unconverted target bases per read before rejection")
+@click.option("--correction-motifs", default=None,
+              help="Comma-separated IUPAC motifs for context-aware correction (e.g. CG,AAA)")
+@click.option("--correction-no-auto-motif", is_flag=True, default=False,
+              help="Disable auto-detection of motifs from data")
+@click.option("--correction-motif-flank", type=int, default=2,
+              help="Flanking bases around each site for motif extraction")
+@click.option("--read-length", type=int, default=150,
+              help="Sequencing read length (bp) for algorithm selection")
 def run(read1, read2, reference, output, config_path, conversion,
         num_reads, sample_pct, simulate, sim_reads, threads, aligners, dry_run, demo,
-        trim_adapters, adapter1, adapter2, umi, umi_location, umi_length, qc):
+        trim_adapters, adapter1, adapter2, umi, umi_location, umi_length, qc,
+        error_correct, correction_strategies, correction_min_mq, correction_min_depth,
+        correction_max_unconverted, correction_motifs, correction_no_auto_motif,
+        correction_motif_flank, read_length):
     """Run the full benchmarking pipeline."""
     cfg = Config(config_path)
     
@@ -96,6 +117,30 @@ def run(read1, read2, reference, output, config_path, conversion,
         cfg.data["umi"]["length"] = umi_length
     if qc:
         cfg.data["qc"]["enabled"] = True
+
+    # Error correction options
+    if error_correct:
+        cfg.data["correction"]["enabled"] = True
+        if correction_strategies:
+            cfg.data["correction"]["strategies"] = [
+                s.strip() for s in correction_strategies.split(",")
+            ]
+        if correction_min_mq:
+            cfg.data["correction"]["min_mq"] = correction_min_mq
+        if correction_min_depth:
+            cfg.data["correction"]["min_depth"] = correction_min_depth
+        if correction_max_unconverted is not None:
+            cfg.data["correction"]["max_unconverted"] = correction_max_unconverted
+        if correction_motifs:
+            cfg.data["correction"]["motifs"] = [
+                m.strip() for m in correction_motifs.split(",")
+            ]
+        if correction_no_auto_motif:
+            cfg.data["correction"]["auto_detect_motifs"] = False
+        if correction_motif_flank is not None:
+            cfg.data["correction"]["motif_flank"] = correction_motif_flank
+        if read_length:
+            cfg.data["correction"]["read_length"] = read_length
 
     pipe = Pipeline(cfg)
     if dry_run:

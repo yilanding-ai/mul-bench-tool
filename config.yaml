@@ -110,6 +110,24 @@ umi:
   strategy: "cluster"                  # cluster, consensus
   dedup: true
 
+# Error correction
+correction:
+  enabled: false
+  strategies: ["mq", "clip", "consensus"]
+  min_mq: 20
+  max_clip_pct: 50
+  max_unconverted: 3
+  min_depth: 5
+  min_agree_ratio: 0.7
+  read_length: 150                  # used by AlgorithmSelector:
+                                    #   <80 → simple, 80-149 → context(flank=1),
+                                    #   150-499 → context(flank=2), >=500 → haplotype
+  motifs: []                        # user-defined IUPAC motifs (e.g. ["CG", "AAA"])
+  auto_detect_motifs: true          # detect motifs from data if motifs list is empty
+  motif_flank:                      # auto (null) → set by AlgorithmSelector per read_length
+  prior_strength:                   # auto (null) → set by AlgorithmSelector per read_length
+  model_threshold: 0.5              # error probability threshold for model-based rejection
+
 # Evaluation settings
 evaluation:
   min_coverage: 5

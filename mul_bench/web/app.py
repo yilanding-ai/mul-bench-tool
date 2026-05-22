@@ -128,13 +128,16 @@ if HAS_DEPS and __name__ == "__main__":
                                             min_value=1000, value=20000, step=1000)
 
         st.subheader("Preprocessing")
-        col3, col4, col5 = st.columns(3)
+        col3, col4, col5, col6 = st.columns(4)
         with col3:
             do_qc = st.checkbox("Run QC", value=True)
         with col4:
             trim_adapters = st.checkbox("Trim adapters")
         with col5:
             do_umi = st.checkbox("UMI dedup")
+        with col6:
+            do_correct = st.checkbox("Error correct",
+                                     help="Filter low-quality alignments and apply consensus correction")
 
         # Aligner selection
         st.subheader("Aligners")
@@ -191,6 +194,8 @@ if HAS_DEPS and __name__ == "__main__":
                     cfg.data["adapter"]["enabled"] = True
                 if do_umi:
                     cfg.data["umi"]["enabled"] = True
+                if do_correct:
+                    cfg.data["correction"]["enabled"] = True
                 if use_mock:
                     cfg.data["aligners"]["enabled"] = []
                 else:
