@@ -32,6 +32,7 @@ class Config:
             "aligners": {
                 "enabled": [
                     "bwameth", "bsbolt", "bsmap", "walt", "abismal", "batmeth2",
+                    "basal",
                     "hisat3n", "hisat3n_repeat", "bismark_bwt2_e2e", "bismark_his2",
                     "bsseeker2_bwt", "bsseeker2_soap2", "bsseeker2_bwt2_e2e",
                     "bsseeker2_bwt2_local",

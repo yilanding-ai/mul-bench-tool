@@ -5,6 +5,7 @@ from .bsmap import BSMAPAligner
 from .walt import WaltAligner
 from .abismal import AbismalAligner
 from .batmeth2 import Batmeth2Aligner
+from .basal import BasalAligner
 from .hisat3n import Hisat3nAligner, Hisat3nRepeatAligner
 from .bismark import BismarkBwt2E2EAligner, BismarkHis2Aligner
 from .bsseeker2 import (
@@ -21,6 +22,7 @@ ALIGNER_REGISTRY = {
     "walt": WaltAligner,
     "abismal": AbismalAligner,
     "batmeth2": Batmeth2Aligner,
+    "basal": BasalAligner,
     "hisat3n": Hisat3nAligner,
     "hisat3n_repeat": Hisat3nRepeatAligner,
     "bismark_bwt2_e2e": BismarkBwt2E2EAligner,

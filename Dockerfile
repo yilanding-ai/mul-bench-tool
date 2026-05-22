@@ -6,7 +6,7 @@
 FROM ubuntu:22.04 AS base
 
 LABEL maintainer="mul-bench" \
-      description="Mul-Bench: 14 alignment algorithms benchmark for DNA methylation"
+      description="Mul-Bench: multi-algorithm methylation alignment benchmark"
 
 ENV DEBIAN_FRONTEND=noninteractive
 ENV LANG=C.UTF-8
@@ -36,7 +36,7 @@ RUN wget -q https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.s
 
 ENV PATH=/opt/conda/bin:$PATH
 
-# Install all 14 aligners + utilities via conda/bioconda
+# Install all 15 aligners + utilities via conda/bioconda
 RUN conda create -y -n mul-bench python=3.10 && \
     conda install -y -n mul-bench -c bioconda -c conda-forge \
     # Core aligners from the paper

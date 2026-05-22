@@ -11,7 +11,7 @@ CONV_CHOICES = ALL_CONVERSION_TAGS
 @click.group()
 @click.version_option(version="1.0.0")
 def main():
-    """Mul-Bench: Benchmark 14 DNA methylation alignment algorithms.
+    """Mul-Bench: Multi-algorithm methylation alignment benchmark.
     
     Supports all 12 conversion types, single-end and paired-end sequencing data.
     """
@@ -31,7 +31,7 @@ def main():
 @click.option("--simulate", is_flag=True, help="Generate simulated data instead")
 @click.option("--sim-reads", type=int, default=50000, help="Number of simulated reads")
 @click.option("--threads", type=int, default=8, help="Number of threads")
-@click.option("--aligners", help="Comma-separated list of aligners (e.g. 'bwameth,bsbolt') or 'all' for all 14")
+@click.option("--aligners", help="Comma-separated list of aligners (e.g. 'bwameth,bsbolt') or 'all' for all 15")
 @click.option("--dry-run", is_flag=True, help="Check tools without running")
 @click.option("--demo", is_flag=True, help="Quick demo with mock aligners (no external tools needed)")
 @click.option("--trim-adapters", is_flag=True, help="Enable adapter trimming")
@@ -160,6 +160,7 @@ def list_aligners():
         ("walt", "Walt: Fast bisulfite read aligner"),
         ("abismal", "Abismal: Bisulfite read aligner"),
         ("batmeth2", "Batmeth2: Bisulfite aligner"),
+        ("basal", "Basal: Bisulfite alignment algorithm"),
         ("hisat3n", "HISAT-3n: Hierarchical indexing for spliced alignment"),
         ("hisat3n_repeat", "HISAT-3n (repeat): Repeat-aware alignment"),
         ("bismark_bwt2_e2e", "Bismark-bwt2-e2e: End-to-end bowtie2 mode"),

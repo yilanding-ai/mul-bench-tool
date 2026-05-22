@@ -1,12 +1,10 @@
 # Mul-Bench
 
-Benchmark 14 DNA methylation alignment algorithms for whole genome bisulfite/converted sequencing.
-
-Based on the paper: *"Benchmarking DNA methylation analysis of 14 alignment algorithms for whole genome bisulfite sequencing in mammals"* (Gong et al., 2022, CSBJ).
+Multi-algorithm methylation alignment benchmark for bisulfite/converted sequencing.
 
 ## Features
 
-- **14 alignment tools**: Bwa-meth, BSBolt, BSMAP, Walt, Abismal, Batmeth2, HISAT-3n, HISAT-3n (repeat), Bismark-bwt2-e2e, Bismark-his2, BSseeker2-bwt, BSseeker2-soap2, BSseeker2-bwt2-e2e, BSseeker2-bwt2-local
+- **15 alignment tools**: Bwa-meth, BSBolt, BSMAP, Walt, Abismal, Batmeth2, Basal, HISAT-3n, HISAT-3n (repeat), Bismark-bwt2-e2e, Bismark-his2, BSseeker2-bwt, BSseeker2-soap2, BSseeker2-bwt2-e2e, BSseeker2-bwt2-local
 - **12 conversion types**: C>T, T>C, A>G, G>A, A>C, C>A, G>T, T>G, A>T, T>A, C>G, G>C
 - **Single-end & Paired-end**: Both modes supported
 - **Simulated data**: Built-in simulator with known ground truth (no input files needed)
@@ -344,6 +342,7 @@ All 12 possible single-base substitutions are supported:
 | walt | Walt: Fast bisulfite read aligner |
 | abismal | Abismal: Bisulfite read aligner |
 | batmeth2 | Batmeth2: Bisulfite aligner |
+| basal | Basal: Bisulfite alignment algorithm |
 | hisat3n | HISAT-3n: Hierarchical indexing for spliced alignment |
 | hisat3n_repeat | HISAT-3n (repeat): Repeat-aware alignment |
 | bismark_bwt2_e2e | Bismark-bwt2-e2e: End-to-end bowtie2 mode |

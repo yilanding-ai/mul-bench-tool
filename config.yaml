@@ -41,6 +41,7 @@ aligners:
     - walt
     - abismal
     - batmeth2
+    - basal
     - hisat3n
     - hisat3n_repeat
     - bismark_bwt2_e2e
@@ -64,6 +65,8 @@ aligner_params:
   abismal:
     extra_args: ""
   batmeth2:
+    extra_args: ""
+  basal:
     extra_args: ""
   hisat3n:
     extra_args: ""

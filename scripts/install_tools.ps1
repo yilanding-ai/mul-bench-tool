@@ -1,4 +1,4 @@
-# Install all 14 alignment tools via conda on Windows
+# Install all 15 alignment tools via conda on Windows
 # Run this script in PowerShell (as Administrator recommended)
 
 Write-Host "========================================" -ForegroundColor Cyan

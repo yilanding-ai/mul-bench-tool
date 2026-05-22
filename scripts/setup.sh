@@ -36,7 +36,7 @@ case "$MODE" in
         conda create -y -n $ENV_NAME python=3.10
 
         # Install tools
-        echo "Installing 14 alignment tools..."
+        echo "Installing 15 alignment tools..."
         conda install -y -n $ENV_NAME -c bioconda -c conda-forge \
             bwameth \
             bsbolt \

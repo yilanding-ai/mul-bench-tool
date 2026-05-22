@@ -51,7 +51,7 @@ if HAS_DEPS and __name__ == "__main__":
 
     # ─── Sidebar ──────────────────────────────────────────────────────────
     st.sidebar.title("Mul-Bench")
-    st.sidebar.caption("Benchmark 14 DNA methylation aligners")
+    st.sidebar.caption("Multi-algorithm methylation alignment benchmark")
 
     page = st.sidebar.radio(
         "Navigation",
@@ -140,6 +140,7 @@ if HAS_DEPS and __name__ == "__main__":
         st.subheader("Aligners")
         all_aligners = [
             "bwameth", "bsbolt", "bsmap", "walt", "abismal", "batmeth2",
+            "basal",
             "hisat3n", "hisat3n_repeat", "bismark_bwt2_e2e", "bismark_his2",
             "bsseeker2_bwt", "bsseeker2_soap2", "bsseeker2_bwt2_e2e", "bsseeker2_bwt2_local",
         ]
@@ -317,9 +318,7 @@ if HAS_DEPS and __name__ == "__main__":
     elif page == "About":
         st.title("About Mul-Bench")
         st.markdown("""
-        ### Benchmark 14 DNA Methylation Alignment Algorithms
-
-        Based on the paper: [Gong et al. (2022)](https://doi.org/10.1016/j.csbj.2022.08.051)
+        ### Multi-Algorithm Methylation Alignment Benchmark
 
         **Supported Aligners:**
         1. Bwa-meth
@@ -328,14 +327,15 @@ if HAS_DEPS and __name__ == "__main__":
         4. Walt
         5. Abismal
         6. Batmeth2
-        7. HISAT-3n
-        8. HISAT-3n (repeat)
-        9. Bismark-bwt2-e2e
-        10. Bismark-his2
-        11. BSseeker2-bwt
-        12. BSseeker2-soap2
-        13. BSseeker2-bwt2-e2e
-        14. BSseeker2-bwt2-local
+        7. Basal
+        8. HISAT-3n
+        9. HISAT-3n (repeat)
+        10. Bismark-bwt2-e2e
+        11. Bismark-his2
+        12. BSseeker2-bwt
+        13. BSseeker2-soap2
+        14. BSseeker2-bwt2-e2e
+        15. BSseeker2-bwt2-local
 
         **Features:**
         - 12 conversion types: C>T, T>C, A>G, G>A, A>C, C>A, G>T, T>G, A>T, T>A, C>G, G>C

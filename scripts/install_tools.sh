@@ -1,5 +1,5 @@
 #!/bin/bash
-# Install all 14 alignment tools via conda
+# Install all 15 alignment tools via conda
 # Usage: bash install_tools.sh
 
 set -e
