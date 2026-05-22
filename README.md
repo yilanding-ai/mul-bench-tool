@@ -17,7 +17,10 @@ Multi-algorithm methylation alignment benchmark for bisulfite/converted sequenci
 - **UMI processing**: Header/inline extraction, cluster/consensus deduplication, auto-detect
 - **Rich reports**: HTML, JSON, CSV, plots (matplotlib/seaborn)
 - **Web UI**: Interactive Streamlit interface with Plotly charts
-- **Docker**: Multi-stage containerization, docker-compose support
+- **Error correction**: 7 strategies — mq, clip, pair, unconverted, consensus, context (motif-aware Bayesian), model (ML-based)
+- **Smart algorithm selection**: Auto-picks correction algorithm by read length (<80bp / 80-149 / 150-499 / ≥500bp)
+- **Motif detection**: Auto-detect methylation-enriched sequence motifs from reference genome
+- **ML-based error detection**: Logistic regression trained on 9 SAM-derived features, pure numpy, no extra dependencies
 
 ## Installation
 
@@ -127,6 +130,17 @@ Options:
   --enable-qc               Enable QC analysis phase
   --enable-trim             Enable adapter trimming
   --enable-umi              Enable UMI processing
+  --sample-pct INT          Use percentage of reads for validation (instead of --num-reads)
+  --error-correct           Enable error correction (post-alignment)
+  --correction-strategies STR  Comma-separated strategies: mq,clip,pair,unconverted,consensus,context,model
+  --correction-min-mq INT       Min MAPQ for mq strategy (default: 20)
+  --correction-min-depth INT    Min depth for consensus/context correction (default: 5)
+  --correction-max-unconverted INT  Max unconverted target bases per read (default: 3)
+  --correction-motifs STR      IUPAC motifs for context-aware correction (e.g. CG,AAA)
+  --correction-no-auto-motif   Disable auto-detection of motifs from data
+  --correction-motif-flank INT Flanking bases for motif extraction (default: auto by read length)
+  --correction-model-threshold FLOAT  Error probability threshold for model (default: 0.5)
+  --read-length INT            Sequencing read length for algorithm selection (default: 150)
   --help                    Show this message
 ```
 
@@ -151,6 +165,24 @@ mul-bench run -1 sample_R1.fastq.gz -r reference.fa \
 mul-bench run --simulate --conversion tc -o ./results_tc
 mul-bench run --simulate --conversion ac -o ./results_ac
 mul-bench run --simulate --conversion cg -o ./results_cg
+
+# Error correction: consensus only (filter low depth, hard-threshold extreme ratios)
+mul-bench run --simulate --error-correct --correction-strategies consensus -o ./results
+
+# Error correction: context-aware Bayesian with motif auto-detection
+mul-bench run --simulate --error-correct --correction-strategies context --read-length 150 -o ./results
+
+# Error correction: custom motifs for m6A (A-to-G) conversion
+mul-bench run --simulate --conversion ag --error-correct --correction-strategies context \
+  --correction-motifs AAA --read-length 150 -o ./results
+
+# Error correction: model-based + consensus (train logistic regression, then filter)
+mul-bench run --simulate --error-correct --correction-strategies model,consensus -o ./results
+
+# Full correction pipeline: all SAM-level filters + context Bayesian correction
+mul-bench run --simulate --error-correct \
+  --correction-strategies mq,clip,unconverted,context \
+  --correction-min-mq 30 --correction-max-unconverted 5 -o ./results
 ```
 
 ### `simulate` — Generate simulated data only
@@ -286,6 +318,65 @@ Launches a browser-based UI with 5 pages:
 - **Results**: Browse benchmark results
 - **Multi-Sample**: Compare multiple samples
 - **About**: Package information
+
+## Error Correction
+
+Mul-Bench includes a modular error correction system with 7 strategies, divided into two phases:
+
+### SAM-level filters (Phase 1.5, applied before methylation calling)
+
+| Strategy | Description | Config |
+|---|---|---|
+| `mq` | Remove reads below MAPQ threshold | `--correction-min-mq` (default: 20) |
+| `clip` | Remove reads with excessive soft-clipping | `max_clip_pct: 50` |
+| `pair` | Remove discordant paired-end reads (wrong chromosome / TLEN > 1000bp) | — |
+| `unconverted` | Remove reads with too many unconverted target bases; writes rejected reads to separate FASTQ | `--correction-max-unconverted` (default: 3) |
+| `model` | Logistic regression on 9 features (mapq, clip_ratio, target_count, converted_count, unconverted_ratio, gc_content, read_length, mismatch_ratio, is_second); trained on simulated data with ground truth | `--correction-model-threshold` (default: 0.5) |
+
+### BED-level correction (Phase 3, applied after methylation calling)
+
+| Strategy | Description | Algorithm Selection |
+|---|---|---|
+| `consensus` | Hard threshold: sites with ratio ≥ 0.7 → 1.0, ≤ 0.3 → 0.0 | All read lengths |
+| `context` | Beta-Binomial posterior with motif-specific priors. Extracts flanking sequence (±N bp) from reference, matches IUPAC motifs, applies shrinkage | `< 80bp`: simple fallback<br>`80-149bp`: flank=1, prior=5<br>`150-499bp`: flank=2, prior=10<br>`≥500bp`: flank=3, prior=10 |
+
+### Model-based Read Error Detection
+
+When `model` strategy is enabled, the pipeline automatically:
+
+1. **Trains** a logistic regression classifier on mock aligner SAM output + ground truth
+2. **Extracts 9 features** per read (all from SAM columns, no external data needed)
+3. **Predicts** error probability P(read is unreliable) for each aligned read
+4. **Filters** reads with P(error) ≥ threshold into a separate FASTQ for independent analysis
+
+The model is pure numpy (no sklearn/scipy dependency) and saves to a 1KB JSON file.
+
+### Motif Auto-Detection
+
+When `context` strategy is enabled without explicit motifs, Mul-Bench automatically:
+- Extracts ±N bp flanking sequence around each methylated and unmethylated site
+- Computes enrichment ratio for each k-mer
+- Reports top enriched motifs and uses them as Bayesian priors
+
+### Usage examples
+
+```bash
+# Context-aware Bayesian correction with motif auto-detection
+mul-bench run --simulate --error-correct --correction-strategies context
+
+# Explicit motifs for m6A
+mul-bench run --simulate --conversion ag --error-correct \
+  --correction-strategies context --correction-motifs AAA
+
+# Model-based error detection + consensus
+mul-bench run --simulate --error-correct \
+  --correction-strategies model,consensus
+
+# All filters combined
+mul-bench run --simulate --error-correct \
+  --correction-strategies mq,clip,unconverted,context \
+  --correction-min-mq 30 --correction-max-unconverted 5
+```
 
 ## Output Structure
 
